@@ -6,7 +6,7 @@ import { useRealtime } from "@/lib/realtime-client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 
 function formatTimeRemaining(seconds: number) {
   const mins = Math.floor(seconds / 60);
@@ -25,6 +25,7 @@ const Page = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [copyStatus, setCopyStatus] = useState("COPY");
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
 
   const { data: ttlData } = useQuery({
     queryKey: ["ttl", roomId],
@@ -32,18 +33,31 @@ const Page = () => {
       const res = await client.room.ttl.get({ query: { roomId } });
       return res.data;
     },
-    refetchInterval: 1000,
   });
 
-  const timeRemaining = ttlData?.ttl ?? null;
+  useEffect(() => {
+    if (ttlData?.ttl !== undefined) setTimeRemaining(ttlData.ttl);
+  }, [ttlData]);
 
-  // If timeRemaining is 0, it means the room has been destroyed, so we redirect the user back to the homepage with a query param indicating that the room was destroyed. This will trigger a toast notification on the homepage.
   useEffect(() => {
     if (timeRemaining === null || timeRemaining < 0) return;
-    // Just in case the real-time event is missed, we have this fallback to ensure the user is redirected if the room is destroyed
+
     if (timeRemaining === 0) {
       router.push("/?destroyed=true");
+      return;
     }
+
+    const interval = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [timeRemaining, router]);
 
   const { data: messages, refetch } = useQuery({

@@ -6,10 +6,6 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
-// This is the entry point for the /room/[roomId] route.
-// It serves as a lobby where the user can see their username and create a new room.
-// Once they create a room, they are redirected to the actual chat room page.
-// This separation allows us to handle errors (like room not found or room full) in the middleware and redirect users back to this lobby with appropriate error messages.
 const Page = () => {
   return (
     <Suspense>
@@ -93,7 +89,7 @@ function Lobby() {
               onClick={() => createRoom()}
               className="w-full bg-zinc-100 text-black p-3 text-sm font-bold hover:bg-zinc-50 hover:text-black transition-colors mt-2 cursor-pointer disabled:opacity-50"
             >
-              CREATE A SECURE ROOM
+              CREATE SECURE ROOM
             </button>
           </div>
         </div>
